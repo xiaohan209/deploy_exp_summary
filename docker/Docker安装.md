@@ -118,7 +118,7 @@ sudo systemctl enable docker.service
 sudo systemctl enable containerd.service
 ```
 
-	### 配置 Docker 守护进程在哪里监听连接
+### 配置 Docker 守护进程在哪里监听连接
 
 默认情况下，Docker守护进程侦听Unix Socket，要Docker接受来自远程主机的请求需要配置为侦听 IP 地址和端口以及 UNIX 套接字。更多详细信息，请查看[Docker CLI 参考](https://docs.docker.com/engine/reference/commandline/dockerd/)文章的“将[Docker](https://docs.docker.com/engine/reference/commandline/dockerd/)绑定到另一个主机/端口或 unix 套接字”部分。
 

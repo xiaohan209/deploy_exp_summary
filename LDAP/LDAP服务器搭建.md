@@ -231,8 +231,9 @@ ldapadd -Y EXTERNAL -H ldapi:/// -f ~/ldap/myself-config/chrootpwd.ldif
 参考博客：
 
 - https://blog.csdn.net/Mr_rsq/article/details/118937775
-
 - https://studygolang.com/articles/19346
+- https://www.jianshu.com/p/59ecd84118ce
+- https://blog.csdn.net/weixin_39594447/article/details/87804225
 
 官方文档：https://pkg.go.dev/gopkg.in/ldap.v3#section-readme
 

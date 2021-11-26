@@ -11,7 +11,7 @@
 >
 > 
 >
-> SLAPD 使用参数手册：https://www.openldap.org/software/man.cgi?query=slapd
+> SLAPD使用参数手册：https://www.openldap.org/software/man.cgi?query=slapd
 >
 > OpenLDAP文档：https://www.openldap.org/doc/
 
@@ -19,7 +19,9 @@
 
 LDAP（Light Directory Access Portocol），是基于X.500标准的轻量级目录访问协议。
 
-目录服务是为查询、浏览和搜索而优化的数据库，它成树状结构组织数据，类似文件目录一样。目录数据库和关系数据库不同，它有优异的读性能，很适合查询，但写性能差，并且没有事务处理、回滚等复杂功能，不适于存储修改频繁的数据。
+目录服务是为查询、浏览和搜索而优化的数据库，它成树状结构组织数据，类似文件目录一样。
+
+目录数据库和关系数据库不同，它有优异的读性能，很适合查询，但写性能差，并且没有事务处理、回滚等复杂功能，不适于存储修改频繁的数据。
 
 OpenLDAP是这个协议的一个开源实现
 
@@ -77,41 +79,41 @@ URI     ldap://192.168.5.180:389
 
 
 
-如果有其他教程需要修改slapd.conf文件或slapd.d的文件夹下的ldif文件，教程已经落后很多个版本了，修改配置应该采用`ldapmodify`命令进行修改
+
 
 
 
 修改openldap配置
-    这里就是重点中的重点了，从openldap2.4.23版本开始，所有配置都保存在/etc/openldap/slapd.d目录下的cn=config文件夹内，不再使用slapd.conf作为配置文件。配置文件的后缀为 ldif，且每个配置文件都是通过命令自动生成的，任意打开一个配置文件，在开头都会有一行注释，说明此为自动生成的文件，请勿编辑，使用ldapmodify命令进行修改
+从openldap2.4.23版本开始，所有配置保存在/etc/openldap/slapd.d目录下的cn=config文件夹内，不再使用slapd.conf作为配置文件。配置文件的后缀为 ldif，且每个配置文件都是通过命令自动生成的，任意打开一个配置文件，在开头都会有一行注释，说明此为自动生成的文件，请勿编辑。因此修改信息需要使用ldapmodify命令进行修改
 
 
 
-   安装openldap后，会有三个命令用于修改配置文件，分别为ldapadd, ldapmodify, ldapdelete，顾名思义就是添加，修改和删除。而需要修改或增加配置时，则需要先写一个ldif后缀的配置文件，然后通过命令将写的配置更新到slapd.d目录下的配置文件中去，完整的配置过程如下，跟着我做就可以了：
+安装openldap后，会有三个命令用于修改配置文件，分别为ldapadd, ldapmodify, ldapdelete，顾名思义就是添加，修改和删除。而需要修改或增加配置时，则需要先写一个ldif后缀的配置文件，然后通过命令将写的配置更新到slapd.d目录下的配置文件中去，完整的配置过程如下，跟着我做就可以了：
 
 ```shell
 # 生成管理员密码,记录下这个密码，后面需要用到
-slappasswd -s 123456
-{SSHA}LSgYPTUW4zjGtIVtuZ8cRUqqFRv1tWpE
+slappasswd
+# 按要求输入密码后会生成出{SSHA}15TXO5dtVyvBlU6MFV8kr2Cn5phgxTLB，记录下来
 
-# 新增修改密码文件,ldif为后缀，文件名随意，不要在/etc/openldap/slapd.d/目录下创建类似文件
+# 新增修改密码文件,ldif为后缀，文件名随意，不要在/etc/ldap/slapd.d/目录下创建类似文件
 # 生成的文件为需要通过命令去动态修改ldap现有配置，如下，我在家目录下，创建文件
-cd ~
-vim changepwd.ldif
+mkdir -p ~/ldap/myself-config/
+vim ~/ldap/myself-config/chrootpwd.ldif
 ----------------------------------------------------------------------
 dn: olcDatabase={0}config,cn=config
 changetype: modify
 add: olcRootPW
-olcRootPW: {SSHA}LSgYPTUW4zjGtIVtuZ8cRUqqFRv1tWpE
+olcRootPW: {SSHA}15TXO5dtVyvBlU6MFV8kr2Cn5phgxTLB
 ----------------------------------------------------------------------
 # 这里解释一下这个文件的内容：
-# 第一行执行配置文件，这里就表示指定为 cn=config/olcDatabase={0}config 文件。你到/etc/openldap/slapd.d/目录下就能找到此文件
+# 第一行执行配置文件，这里就表示指定为 cn=config/olcDatabase={0}config 在/etc/openldap/slapd.d/目录下
 # 第二行 changetype 指定类型为修改
 # 第三行 add 表示添加 olcRootPW 配置项
 # 第四行指定 olcRootPW 配置项的值
 # 在执行下面的命令前，你可以先查看原本的olcDatabase={0}config文件，里面是没有olcRootPW这个项的，执行命令后，你再看就会新增了olcRootPW项，而且内容是我们文件中指定的值加密后的字符串
 
 # 执行命令，修改ldap配置，通过-f执行文件
-ldapadd -Y EXTERNAL -H ldapi:/// -f changepwd.ldif
+ldapadd -Y EXTERNAL -H ldapi:/// -f ~/ldap/myself-config/chrootpwd.ldif
 ```
 
 
@@ -152,7 +154,15 @@ ldapadd -Y EXTERNAL -H ldapi:/// -f changepwd.ldif
 
    
 
-6. a
+6. 添加基础的schema
+
+   ```sh
+   ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/cosine.ldif
+   ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/nis.ldif
+   ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/inetorgperson.ldif
+   ```
+
+6. 
 
 
 
@@ -216,3 +226,58 @@ ldapadd -Y EXTERNAL -H ldapi:/// -f changepwd.ldif
 
 
 
+### GO-LDAP
+
+参考博客：
+
+- https://blog.csdn.net/Mr_rsq/article/details/118937775
+
+- https://studygolang.com/articles/19346
+
+官方文档：https://pkg.go.dev/gopkg.in/ldap.v3#section-readme
+
+仓库地址：https://github.com/go-ldap/ldap
+
+#### 第三方包下载
+
+```go
+ go get github.com/go-ldap/ldap/v3
+```
+
+#### 连接
+
+```go
+func NewLDAPService(serverAddr string) (*ldap.Conn, error) {
+	// 纯tcp连接访问 一般为389端口
+  ldapConnection, err := ldap.Dial("tcp", serverAddr)
+	if err != nil {
+		return nil, err
+	}
+  // TLS连接访问 一般为636端口
+	tlsConfig := &tls.Config{InsecureSkipVerify: true}
+	ldapsConnection, err := ldap.DialTLS("tcp", serverAddr, tlsConfig)
+	if err != nil {
+		return nil, err
+	}
+  // 根据连接形式选择一种进行连接即可
+  return ldap_connection,err
+}
+```
+
+#### 绑定认证
+
+```go
+func NewLDAPService(serverConnection )
+
+err = conn.Bind(config.BindUserName, config.BindPassword)
+	if err != nil {
+		return nil, err
+	}
+berror := conn.Bind("uid=admin,dc=wjq,dc=com", "openldap")
+```
+
+
+
+
+
+#### 对服务器进行操作

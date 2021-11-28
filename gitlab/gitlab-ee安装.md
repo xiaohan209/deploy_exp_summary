@@ -157,9 +157,11 @@ sudo apt-get install -y postfix
 
 
 
-## LDAP绑定
+## [LDAP绑定][https://docs.gitlab.com/ee/administration/auth/ldap/index.html#ssl-configuration-settings]
 
-对于Omnibus安装方式，直接在`/etc/gitlab/gitlab.rb`加入以下配置：
+#### Omnibus软件包配置
+
+直接在`/etc/gitlab/gitlab.rb`加入以下配置：
 
 ```ruby
 gitlab_rails['ldap_enabled'] = true
@@ -184,6 +186,7 @@ gitlab_rails['ldap_servers'] = {
   'timeout' => 10,
   'active_directory' => true,
   'allow_username_or_email_login' => false,
+  #设置禁止通过LDAP新注册用户
   'block_auto_created_users' => false,
   'base' => 'dc=example,dc=com',
   'user_filter' => '',
@@ -204,4 +207,152 @@ gitlab_rails['ldap_servers'] = {
   }
 }
 ```
+
+#### 源代码安装配置
+
+在`/home/git/gitlab/config/gitlab.yml`中添加：
+
+```ruby
+production:
+  # snip...
+  ldap:
+    enabled: false
+    prevent_ldap_sign_in: false
+    servers:
+      main:
+        label: 'LDAP'
+        ...
+```
+
+
+
+## 存储库位置迁移
+
+#### 参考博客
+
+- https://blog.csdn.net/qq_36949713/article/details/89025198
+- https://www.cnblogs.com/sanduzxcvbnm/p/14918291.html
+
+#### 迁移方式
+
+gitlab的存储库默认路径为：`/var/opt/gitlab/git-data/repositories`，此文件夹在非root用户情况下是没有打开的权限的
+
+如果需要默认的修改存储库，则需要：
+
+1. 设置存储库位置
+   采用Omnibus-gitlab安装包需要在`/etc/gitlab/gitlab.rb`中增添：
+
+   ```ruby
+   git_data_dirs({
+     # 默认存储目录
+   	"default" => {
+   		"path" => "/var/opt/gitlab/git-data"
+   	},
+   	# 备用存储目录
+     "alternative" => {
+   		"path" => "/home/gitlab-data"
+   	}     
+   })
+   
+   ```
+
+2. 迁移存储库已存的数据（没有数据可跳过）
+   新仓库以`/home/$USER/gitlab-data/`为示例
+
+   ```sh
+   gitlab-ctl stop
+   # 设置新的路径
+   # rsync -av <origin_path> <new_path>
+   rsync -av /var/opt/gitlab/git-data/repositories /home/$USER/gitlab-data/
+   ```
+
+3. 重启gitlab，更新配置
+
+   ```sh
+   gitlab-ctl stop
+   gitlab-ctl reconfigure
+   gitlab-ctl start
+   ```
+
+
+
+## Service Ping设置
+
+
+
+参考链接：https://docs.gitlab.com/ee/development/service_ping/index.html#disable-service-ping
+
+#### 禁用
+
+13.12.3以后版本的禁用可以采用更新配置文件的方式禁用：
+
+1. Omnibus软件安装包：需要在`/etc/gitlab/gitlab.rb`中添加：
+
+   ```ruby
+   gitlab_rails['usage_ping_enabled'] = false
+   ```
+
+   并在服务器中输入命令重新配置：
+
+   ```sh
+   sudo gitlab-ctl reconfigure
+   ```
+
+2. 源码安装：需要编辑`/home/git/gitlab/config/gitlab.yml`：
+
+   ```ruby
+   production: &base
+     # ...
+     gitlab:
+       # ...
+       usage_ping_enabled: false
+   ```
+
+   并重启Gitlab：
+
+   ```sh
+   sudo service gitlab restart
+   ```
+
+9.3到13.12.3中需要使用UI禁用(13.12.3之后的版本也可以这么做)
+
+1. 使用[管理员身份](https://docs.gitlab.com/ee/user/permissions.html)登录
+2. 在顶部栏选择**Menu > Admin**.
+3. 在左侧选择**Settings > Metrics and profiling**
+4. 点击**Usage statistics**
+5. 取消勾选**Enable Service Ping**功能
+6. 点击下方**Save changes**保存更改
+
+## [取消注册功能][https://docs.gitlab.com/ee/user/admin_area/settings/sign_up_restrictions.html]
+
+#### 禁用新注册
+
+使用网页UI方式禁用：
+
+1. 在顶部栏选择**Menu > Admin**
+2. 在左侧栏选择**Settings > General**
+3. 点击**Sign-up restrictions**
+4. 取消勾选**Sign-up enabled**
+5. 点击下方**Save changes**保存更改
+
+## OmniAuth
+
+#### 禁用OmniAuth
+
+1. 通过Omnibus安装：在`/etc/gitlab/gitlab.rb`中添加：
+
+   ```ruby
+   gitlab_rails['omniauth_enabled'] = false
+   ```
+
+2. 源代码安装：在`/home/git/gitlab/config/gitlab.yml`添加
+
+   ```ruby
+   omniauth:
+     enabled: false
+   ```
+
+   
+
+
 

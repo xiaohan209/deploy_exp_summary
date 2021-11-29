@@ -171,7 +171,7 @@ gitlab_rails['ldap_servers'] = {
   'label' => 'LDAP',
   'host' =>  'ldap.mydomain.com',
   'port' => 389,
-  'uid' => 'sAMAccountName',
+  'uid' => 'uid',
   'encryption' => 'simple_tls',
   'verify_certificates' => true,
   'bind_dn' => '_the_full_dn_of_the_user_you_will_bind_with',
@@ -235,7 +235,7 @@ production:
 
 #### 迁移方式
 
-gitlab的存储库默认路径为：`/var/opt/gitlab/git-data/repositories`，此文件夹在非root用户情况下是没有打开的权限的
+gitlab的存储库默认路径为：`/var/opt/gitlab/git-data/`，这个目录下的`repositories`子文件夹里存放每个仓库内容，此文件夹在非root用户情况下是没有打开的权限的
 
 如果需要默认的修改存储库，则需要：
 
@@ -262,8 +262,8 @@ gitlab的存储库默认路径为：`/var/opt/gitlab/git-data/repositories`，�
    ```sh
    gitlab-ctl stop
    # 设置新的路径
-   # rsync -av <origin_path> <new_path>
-   rsync -av /var/opt/gitlab/git-data/repositories /home/$USER/gitlab-data/
+   # rsync -av --delete <origin_path> <new_path>
+   rsync -av --delete /var/opt/gitlab/git-data/repositories /home/$USER/gitlab-data/
    ```
 
 3. 重启gitlab，更新配置
@@ -335,7 +335,7 @@ gitlab的存储库默认路径为：`/var/opt/gitlab/git-data/repositories`，�
 4. 取消勾选**Sign-up enabled**
 5. 点击下方**Save changes**保存更改
 
-## OmniAuth
+## [OmniAuth][https://docs.gitlab.com/ee/integration/omniauth.html#omniauth]
 
 #### 禁用OmniAuth
 
@@ -354,5 +354,96 @@ gitlab的存储库默认路径为：`/var/opt/gitlab/git-data/repositories`，�
 
    
 
+## [重置用户密码][https://docs.gitlab.com/ee/security/reset_user_password.html#reset-your-root-password]
+
+#### Rake方式
+
+13.9以后的版本可以用gitlab-rake任务的方式重置密码
+
+```sh
+sudo gitlab-rake "gitlab:password:reset"
+```
+
+然后输入用户名，新密码以及确认密码即可完成重置
+
+如果需要重置管理员密码或指定用户的密码，也可以直接将用户名传入：
+
+```sh
+# username 即为想设定的用户名，要重置管理员密码则为root
+sudo gitlab-rake "gitlab:password:reset[username]"
+```
+
+#### Rails Console方式
+
+1. 启动Rails Console
+
+2. 找到用户
+
+   1. 通过username：
+
+      ```ruby
+      user = User.find_by_username 'exampleuser'
+      ```
+
+   2. 通过user ID：
+
+      ```ruby
+      # 示例ID为123，默认root用户id为1
+      user = User.find(123)
+      ```
+
+   3. 通过email：
+
+      ```ruby
+      user = User.find_by(email: 'user@example.com')
+      ```
+
+3. 重置密码
+
+   ```ruby
+   # secret_pass为新的密码，请确保两次密码一致 
+   user.password = 'secret_pass'
+   user.password_confirmation = 'secret_pass'
+   ```
+
+4. 如果需要的话，可以使用电子邮件通知用户密码已修改成功
+
+   ```ruby
+   user.send_only_admin_changed_your_password_notification!
+   ```
+
+5. 保存用户
+
+   ```ruby
+   user.save!
+   ```
 
 
+
+## [Rails Console启动及使用][https://docs.gitlab.com/ee/administration/operations/rails_console.html]
+
+#### 启动
+
+1. Omnibus安装包方式
+
+   ```sh
+   sudo gitlab-rails console
+   ```
+
+2. 源代码安装
+
+   ```sh
+   sudo -u git -H bundle exec rails console -e production
+   ```
+
+#### 退出
+
+在控制台中输入`:quit`
+
+#### 输出Rails控制台会话历史记录
+
+在控制台中输入：
+
+```
+puts Readline::HISTORY.to_a
+```

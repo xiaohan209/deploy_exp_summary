@@ -1,10 +1,10 @@
 # FRP
 
-[参考教程][https://www.appinn.com/frp/]
+[参考教程](https://www.appinn.com/frp/)
 
-[FRP仓库地址][https://github.com/fatedier/frp]
+[FRP仓库地址](https://github.com/fatedier/frp)
 
-[FRP官方文档][https://gofrp.org/docs/]
+[FRP官方文档](https://gofrp.org/docs/)
 
 ## 配置
 
@@ -49,7 +49,7 @@ FRP版本：0.38.0
       remote_port = 6000						#与服务主机通信的端口
       ```
 
-      最详细配置参考：https://github.com/fatedier/frp/blob/dev/conf/frpc_full.ini
+      最详细配置参考：<https://github.com/fatedier/frp/blob/dev/conf/frpc_full.ini>
 
    2. frps.ini：
 
@@ -58,9 +58,9 @@ FRP版本：0.38.0
       bind_port = 7000							#服务器开放的端口
       ```
 
-      最详细的配置参考：https://github.com/fatedier/frp/blob/dev/conf/frps_full.ini
+      最详细的配置参考：<https://github.com/fatedier/frp/blob/dev/conf/frps_full.ini>
 
-   比较常用的几种情况[FRP仓库地址][https://github.com/fatedier/frp]的README已经列出来了，直接查看即可
+   比较常用的几种情况[FRP仓库地址](https://github.com/fatedier/frp)的README已经列出来了，直接查看即可
 
 4. 加入service方便管理FRP功能
 

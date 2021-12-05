@@ -1,14 +1,16 @@
 # Go语言环境与项目开发
 
-参考菜鸟教程：https://www.runoob.com/go/
+菜鸟教程：<https://www.runoob.com/go/>
 
-参考博客：https://www.jianshu.com/p/760c97ff644c
+参考博客：
 
-https://zhuanlan.zhihu.com/p/103534192/
+- <https://www.jianshu.com/p/760c97ff644c>
 
-https://blog.csdn.net/benben_2015/article/details/82227338
+- <https://zhuanlan.zhihu.com/p/103534192/>
 
-https://www.cnblogs.com/wl-blog/p/14978415.html
+- <https://blog.csdn.net/benben_2015/article/details/82227338>
+
+- <https://www.cnblogs.com/wl-blog/p/14978415.html>
 
 ## 环境安装
 
@@ -20,8 +22,8 @@ Go版本：1.17.3
 
 安装包下载地址：
 
-1. https://golang.org/dl/
-2. https://golang.google.cn/dl/
+1. <https://golang.org/dl/>
+2. <https://golang.google.cn/dl/>
 
 ### Windows
 
@@ -64,7 +66,7 @@ sudo apt-get install golang
 sudo apt-get install golang-1.16
 ```
 
-且安装好后仍然需要建立GOPATH文件夹并修改环境变量
+且安装好后仍然需要建立`GOPATH`文件夹并修改环境变量
 
 ## Go mod介绍与使用
 

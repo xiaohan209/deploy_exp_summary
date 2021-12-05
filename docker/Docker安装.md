@@ -1,6 +1,6 @@
 # Docker安装
 
-#### [官网链接][https://docs.docker.com/]
+#### [官网链接](https://docs.docker.com/)
 
 #### 主机：ubuntu 20.04 focal
 

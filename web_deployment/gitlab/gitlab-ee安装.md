@@ -333,6 +333,48 @@ gitlab的存储库默认路径为：`/var/opt/gitlab/git-data/`，这个目录�
 4. 取消勾选**Sign-up enabled**
 5. 点击下方**Save changes**保存更改
 
+
+
+### 修改全局用户设置
+
+#### 取消用户创建Group权限
+
+1. 使用Omnibus软件包安装：在`/etc/gitlab/gitlab.rb`中添加以下内容：
+
+   ```ruby
+   gitlab_rails['gitlab_default_can_create_group'] = false
+   ```
+
+   并重新配置启动Gitlab
+
+2. 源代码安装；在`config/gitlab.yml`中修改为：
+
+   ```ruby
+   default_can_create_group: true
+   ```
+
+   并重启Gitlab
+
+#### 取消用户更改username权限
+
+1. 使用Omnibus软件包安装：在`/etc/gitlab/gitlab.rb`中添加以下内容：
+
+   ```ruby
+   gitlab_rails['gitlab_username_changing_enabled'] = false
+   ```
+
+   并重新配置启动Gitlab
+
+2. 从源代码安装：在`config/gitlab.yml`中修改为：
+
+   ```ruby
+   username_changing_enabled: false
+   ```
+
+   并重启Gitlab
+
+
+
 ## [OmniAuth](https://docs.gitlab.com/ee/integration/omniauth.html#omniauth)
 
 #### 禁用OmniAuth

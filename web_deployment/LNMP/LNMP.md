@@ -103,6 +103,31 @@ LNMP结构里php会启动php-fpm服务，Nginx会把用户的动态请求交给p
 
 
 
+#### TIPS
+
+安装后自动部署进`/etc/systemd/system`当中的service，可以直接用service进行启动，即`service nginx start`来启动nginx
+
+安装后进行[管理](https://lnmp.org/faq/lnmp-status-manager.html)：
+
+1. 对lnmp整体进行管理
+
+   ```sh
+   lnmp {start|stop|reload|restart|kill|status}
+   ```
+
+2. 对各个程序进行管理
+
+   ```sh
+   lnmp {nginx|mysql|mariadb|php-fpm|pureftpd} {start|stop|reload|restart|kill|status}
+   ```
+
+3. 多PHP版本状态管理
+
+   ```sh
+   # 5.5为版本号，请根据实际替换
+   /etc/init.d/php-fpm5.5 {start|stop|quit|restart|reload|logrotate} 
+   ```
+
 ### 单独安装
 
 1. Nginx

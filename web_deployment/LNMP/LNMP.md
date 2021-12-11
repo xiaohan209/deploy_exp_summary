@@ -40,7 +40,7 @@ LNMP结构里php会启动php-fpm服务，Nginx会把用户的动态请求交给p
 - MySQL 8.0.23以下版本升级或安装必须CentOS 8+,Debian 9+,Ubuntu 16.04+且必须使用1.7+！！！
 - MySQL 8.0.24以上版本升级或安装必须Debian 11+,Ubuntu 20.04+,Fedora 33+且必须使用1.8！！！
 
-#### 使用方式
+#### 下载安装方式
 
 **操作系统：ubuntu20.04 focal**
 
@@ -103,7 +103,7 @@ LNMP结构里php会启动php-fpm服务，Nginx会把用户的动态请求交给p
 
 
 
-#### TIPS
+#### 管理方式
 
 安装后自动部署进`/etc/systemd/system`当中的service，可以直接用service进行启动，即`service nginx start`来启动nginx
 
@@ -127,6 +127,20 @@ LNMP结构里php会启动php-fpm服务，Nginx会把用户的动态请求交给p
    # 5.5为版本号，请根据实际替换
    /etc/init.d/php-fpm5.5 {start|stop|quit|restart|reload|logrotate} 
    ```
+   
+4. 命令行管理反向代理的配置
+
+   ```sh
+   lnmp vhost {add|list|del}
+   ```
+
+   默认使用的根目录为`/home/wwwroot/<$domain>/`
+
+   默认输出的access log目录为`/home/wwwlogs/<$domain>/`
+
+   配置文件目录为`/usr/local/nginx/conf/vhost/<$domain>/`
+
+5. 
 
 ### 单独安装
 

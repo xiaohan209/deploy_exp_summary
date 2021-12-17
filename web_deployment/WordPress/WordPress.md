@@ -97,7 +97,40 @@ WordPress始于2003年，最开始仅为一款简单的博客系统，但现已�
 
 7. 访问页面运行安装脚本
    
-
 8. 完成安装
 
 ## 设置WordPress
+
+
+
+
+
+
+
+## 迁移WordPress
+
+> - https://zhuanlan.zhihu.com/p/111896376
+
+#### 更换服务器，不换域名
+
+1. 备份原服务器wordpress文件夹下所有内容
+2. 进入phpmyadmin备份全部mysql数据库文件
+3. 在新站点上传备份文件并恢复备份的数据库文件
+
+#### 更换域名
+
+1. 进入phpmyadmin后台
+
+2. 执行如下代码
+
+   ```mysql
+   UPDATE wp_options SET option_value = replace(option_value, 'www.old.com','www.new.com') ;    
+   UPDATE wp_posts SET post_content = replace(post_content, 'www.old.com','www.new.com') ;    
+   UPDATE wp_posts SET guid = replace(guid, 'www.old.com','www.new.com') ;    
+   UPDATE wp_comments SET comment_content = replace(comment_content, 'www.old.com', 'www.new.com') ;    
+   UPDATE wp_comments SET comment_author_url = replace(comment_author_url, 'www.old.com', 'www.new.com') ;
+   ```
+
+   其中`www.old.com`为原域名，`www.new.com`为新域名
+
+3. 

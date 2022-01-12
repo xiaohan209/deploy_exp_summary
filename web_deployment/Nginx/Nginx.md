@@ -27,14 +27,70 @@ nginx是一个高性能的HTTP和反向代理服务器，也是一个IMAP/POP3/S
 
 推荐使用LAMP一键安装包或LNMP一键安装包安装
 
-如果确定想手动安装，则过程为：
+如果确定想手动安装，则可参考[安装教程](https://nginx.org/en/linux_packages.html#Ubuntu)
 
-1. 下载必要的系统依赖
-2. a
-3. a
-4. a
-5. a
-6. a
+对于Linux Ubuntu发行版过程如下：
+
+1. 下载必要的系统依赖：
+
+   ```shell
+   sudo apt install curl gnupg2 ca-certificates lsb-release ubuntu-keyring
+   ```
+
+2. 引入nginx官方签名：
+
+   ```shell
+   curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
+       | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+   ```
+
+3. 确认下载的签名正确：
+
+   ```shell
+   gpg --dry-run --quiet --import --import-options import-show /usr/share/keyrings/nginx-archive-keyring.gpg
+   ```
+
+   确认输出为：
+
+   ```shell
+   pub   rsa2048 2011-08-19 [SC] [expires: 2024-06-14]
+         573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62
+   uid                      nginx signing key <signing-key@nginx.com>
+   ```
+
+4. 添加官方仓库：
+
+   稳定版仓库输入以下命令：
+
+   ```shell
+   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
+   http://nginx.org/packages/ubuntu `lsb_release -cs` nginx" \
+       | sudo tee /etc/apt/sources.list.d/nginx.list
+   ```
+
+   如果需要添加最新开发版，即Mainline Package，则为：
+
+   ```shell
+   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
+   http://nginx.org/packages/mainline/ubuntu `lsb_release -cs` nginx" \
+       | sudo tee /etc/apt/sources.list.d/nginx.list
+   ```
+
+5. 固定存储库为nginx官方发行版，防止下载apt存储库的落后版本：
+
+   ```shell
+   echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" \
+       | sudo tee /etc/apt/preferences.d/99nginx
+   ```
+
+6. 更新源并安装nginx
+
+   ```shell
+   sudo apt update
+   sudo apt install nginx
+   ```
+
+6. 
 
 
 

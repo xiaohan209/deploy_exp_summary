@@ -189,7 +189,7 @@
 
       可以修改`SHARELATEX_SITE_URL`为自己的网站地址，为了后续发放修改密码等链接来进行使用，否则overleaf的网站实例生成URL时会使用`localhost`且不会有端口号，需要在输入链接时自己补全所有的host以及port
 
-6. 启动镜像：
+6. <span id="start-container">启动镜像</span>：
 
    ```shell
    # 容器日志输出到标准输出上
@@ -327,6 +327,46 @@ mongoexport -d sharelatex -c users -f email
 
 
 
+### 升级为Server Pro版本
+
+`Sharelatex Server Pro`是对`Sharelatex-CE`版本的升级，采用了不同的镜像源地址来区分两个版本，升级步骤如下：
+
+1. 获取资格：
+
+   1. 先查看不同版本与部署方式的[功能对比](https://www.overleaf.com/for/enterprises/features)，确定自己需要Pro资格
+   2. 联系overleaf官方：直接向[welcome@overleaf.com](mailto:welcome@overleaf.com)发送邮件或在[Contact Us](https://www.overleaf.com/contact)页面留言
+   3. 根据官方的回复进行购买或协商
+   4. 最终如果购买成功则可以得到官方发放的`key-name`和`key`，作为获取镜像的密钥
+
+2. 修改配置文件：
+
+   对`config/overleaf.rc`的`SERVER_PRO`变量进行修改：
+
+   ```shell
+   SERVER_PRO=true
+   ```
+
+3. 登录镜像仓库：
+   `Server Pro`版本的docker镜像发布在了[quay.io](https://quay.io)仓库，地址为`quay.io/sharelatex/sharelatex-pro`
+
+   用overleaf官方发放的密钥登录仓库:
+
+   ```shell
+   docker login quay.io
+   # 将your_key_name换成官方发放名称
+   Username: <sharelatex+your_key_name>
+   # 将your_key换成官方发放的密钥
+   Password: <your_key>
+   ```
+
+   登录后docker会保留密钥凭据到`/home/${USER}/.docker/config.json`中，下次可以免密登录
+
+   此时可以进行执行`bin/docker-compose pull`镜像拉取，验证镜像是否准确并且有权限获取，也可以直接执行下一步启动容器
+
+4. docker启动容器：
+
+   与普通版本正常[启动镜像](#start-container)一致，输入`bin/up -d`进行启动即可，后续步骤也可参考普通版本[安装步骤](#安装)
+
 ### 配置LDAP
 
 > 参考：
@@ -337,6 +377,34 @@ mongoexport -d sharelatex -c users -f email
 > - <https://github.com/overleaf/toolkit/blob/master/doc/ldap.md>
 > - <https://github.com/overleaf/overleaf/wiki/Server-Pro%3A-LDAP-Config>
 
+注意：自己部署的sharelatex先要[**升级为Server Pro版本**](#升级为Server Pro版本)才能够配置LDAP，进行统一账号认证
+
+### Environment Variables
+
+- `SHARELATEX_LDAP_URL` **(required)** = Url of the LDAP server, E.g. 'ldaps://ldap.example.com:636'
+- `SHARELATEX_LDAP_EMAIL_ATT` = The email attribute the LDAP server will return, defaults to 'mail'
+- `SHARELATEX_LDAP_NAME_ATT` = The property name holding the name of the user which is used in the application
+- `SHARELATEX_LDAP_LAST_NAME_ATT` = If your LDAP server has a first and last name then this can be used in conjuction with `SHARELATEX_LDAP_NAME_ATT`
+- `SHARELATEX_LDAP_PLACEHOLDER` = The placeholder for the login form, defaults to 'Username'
+- `SHARELATEX_LDAP_UPDATE_USER_DETAILS_ON_LOGIN` = If set to 'true', will update the user first_name and last_name field on each login, and turn off the user-details form on /user/settings page. Otherwise, details will be fetched only on first login.
+- `SHARELATEX_LDAP_BIND_DN` = Optional, e.g. 'uid=myapp,ou=users,o=example.com'.
+- `SHARELATEX_LDAP_BIND_CREDENTIALS` = Password for bindDn.
+- `SHARELATEX_LDAP_BIND_PROPERTY` = Optional, default 'dn'. Property of user to bind against client e.g. 'name', 'email'
+- `SHARELATEX_LDAP_SEARCH_BASE` = The base DN from which to search for users by username. E.g. 'ou=users,o=example.com'
+- `SHARELATEX_LDAP_SEARCH_FILTER` = LDAP search filter with which to find a user by username, e.g. '(uid={{username}})'. Use the literal '{{username}}' to have the given username be interpolated in for the LDAP search.
+- `SHARELATEX_LDAP_SEARCH_SCOPE` = Optional, default 'sub'. Scope of the search, one of 'base', 'one', or 'sub'.
+- `SHARELATEX_LDAP_SEARCH_ATTRIBUTES` = Optional, default all. Json array of attributes to fetch from LDAP server.
+- `SHARELATEX_LDAP_GROUP_DN_PROPERTY` = Optional, default 'dn'. The property of user object to use in '{{dn}}' interpolation of groupSearchFilter.
+- `SHARELATEX_LDAP_GROUP_SEARCH_BASE` = Optional. The base DN from which to search for groups. If defined, also groupSearchFilter must be defined for the search to work.
+- `SHARELATEX_LDAP_GROUP_SEARCH_SCOPE` = Optional, default 'sub'.
+- `SHARELATEX_LDAP_GROUP_SEARCH_FILTER` = Optional. LDAP search filter for groups. The following literals are interpolated from the found user object: '{{dn}}' the property configured with groupDnProperty. Optionally you can also assign a function instead, which passes a user object, from this a dynamic groupsearchfilter can be retrieved.
+- `SHARELATEX_LDAP_GROUP_SEARCH_ATTRIBUTES` = Optional, default all. Json array of attributes to fetch from LDAP server.
+- `SHARELATEX_LDAP_CACHE` = Optional, default 'false'. If 'true', then up to 100 credentials at a time will be cached for 5 minutes.
+- `SHARELATEX_LDAP_TIMEOUT` = Optional, default Infinity. How long the client should let operations live for before timing out.
+- `SHARELATEX_LDAP_CONNECT_TIMEOUT` = Optional, default is up to the OS. How long the client should wait before timing out on TCP connections.
+- `SHARELATEX_LDAP_TLS_OPTS_CA_PATH` = A JSON array of paths to the CA file for TLS, must be accessible to the docker container. E.g. `-env SHARELATEX_LDAP_TLS_OPTS_CA_PATH='["/var/one.pem", "/var/two.pem"]'`
+- `SHARELATEX_LDAP_TLS_OPTS_REJECT_UNAUTH` = If 'true', the server certificate is verified against the list of supplied CAs.
+
 
 
 ### 配置SMTP
@@ -344,3 +412,35 @@ mongoexport -d sharelatex -c users -f email
 >参考：
 >
 >- https://github.com/overleaf/overleaf/wiki/Configuring-SMTP-Email
+
+##### Sender Configuration
+
+- `SHARELATEX_EMAIL_FROM_ADDRESS`: **REQUIRED** - The from address e.g. `'support@mycompany.com'`
+- `SHARELATEX_EMAIL_REPLY_TO`: The reply to address e.g. `'noreply@mycompany.com'`
+
+##### AWS SES
+
+- `SHARELATEX_EMAIL_AWS_SES_ACCESS_KEY_ID`: If using AWS SES the access key
+- `SHARELATEX_EMAIL_AWS_SES_SECRET_KEY`: If using AWS SES the secret key
+- SHARELATEX_EMAIL_AWS_SES_REGION
+
+##### AWS SES with Instance Roles
+
+- `SHARELATEX_EMAIL_DRIVER`: When this is set to `ses`, the email system will rely on the configured instance roles to send email.
+
+##### SMTP
+
+- `SHARELATEX_EMAIL_SMTP_HOST`: SMTP Host, needs to be accessible from the docker container
+- `SHARELATEX_EMAIL_SMTP_PORT`: SMTP port to use
+- `SHARELATEX_EMAIL_SMTP_SECURE`: Boolean if SMTP secure should be used
+- `SHARELATEX_EMAIL_SMTP_USER`: User to authenticate against the STMP server with
+- `SHARELATEX_EMAIL_SMTP_PASS`: Password for SMTP User
+- `SHARELATEX_EMAIL_SMTP_TLS_REJECT_UNAUTH`: Rejected unauthorized tls connections
+- `SHARELATEX_EMAIL_SMTP_IGNORE_TLS`: turns off STARTTLS support if true
+- `SHARELATEX_EMAIL_SMTP_NAME`: optional hostname of the client, used for identifying to the server, defaults to hostname of the machine.
+- `SHARELATEX_EMAIL_SMTP_LOGGER`: when set to `true` prints logging messages to `web.log`.
+- SHARELATEX_EMAIL_TEXT_ENCODING
+
+#### Customisation
+
+- `SHARELATEX_CUSTOM_EMAIL_FOOTER` Custom HTML which is appended to all emails. e.g. `--env SHARELATEX_CUSTOM_EMAIL_FOOTER="<div>This system is run by department x </div> <div> If you have any questions please look at our faq <a href='https://somwhere.com'>here</a></div>"`

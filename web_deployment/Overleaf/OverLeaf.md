@@ -234,7 +234,57 @@
 
       
 
-8. 根据需要可以保存完整版为新镜像：
+8. 补全中文字体(如果不需要可以跳过)：
+
+   1. 上传本地中文字体库，以windows为例，打开`C:\Windows\Fonts`文件夹，将其上传到服务器`~/fonts`文件夹中：
+
+      1. 可以使用mobaxterm自带的上传文件功能
+
+      2. 可以使用windows中的scp功能：
+
+         ```sh
+         scp.exe -r C:\Windows\Fonts ${user}@${ip}:~/windowsfonts
+         ```
+
+   2. 在服务器中处理字体
+
+      ```shell
+      # 进入刚上传到的文件夹中
+      cd ~/fonts
+      # 删掉.fon字体，因为这种字体建立目录时可能报错，尽量只留.ttf和.otf格式的字体
+      # 如果只想上传少量特定的字体，也可以其他都删掉，只留要放进docker的即可
+      rm -r *.fon
+      cd ..
+      # 由于docker只能单文件copy，所以需要打包
+      tar -zcvf windowsfonts.tar.gz windowsfonts/
+      # 传入当前运行的docker容器的root目录，sharelatex为容器名，可根据目前实际容器名进行调整
+      docker cp windowsfonts.tar.gz sharelatex:/root
+      ```
+
+   3. 容器中安装字体：
+
+      ```shell
+      # 进入sharelatex容器
+      docker exec -it sharelatex bash
+      # 安装wqy字体同时安装xfont工具
+      apt update && apt upgrade
+      apt install xfonts-wqy
+      # 将上传的字体放入系统字体
+      cd /root
+      tar -zxvf windowsfonts.tar.gz
+      mv windowsfonts /usr/share/fonts
+      # 安装新的系统字体
+      cd /usr/share/fonts/windowsfonts
+      mkfontscale
+      mkfontdir
+      fc-cache -fv
+      # 检查安装结果
+      fc-list :lang=zh-cn
+      ```
+
+      
+
+9. 根据需要可以保存完整版为新镜像：
 
    ```shell
    docker commit sharelatex sharelatex/sharelatex:with-texlive-full
@@ -251,7 +301,7 @@
            image: sharelatex/sharelatex:with-texlive-full
    ```
 
-9. 可以重启镜像进行使用了：
+10. 可以重启镜像进行使用了：
 
    ```shell
    bin/stop
@@ -377,33 +427,37 @@ mongoexport -d sharelatex -c users -f email
 > - <https://github.com/overleaf/toolkit/blob/master/doc/ldap.md>
 > - <https://github.com/overleaf/overleaf/wiki/Server-Pro%3A-LDAP-Config>
 
-注意：自己部署的sharelatex先要[**升级为Server Pro版本**](#升级为Server Pro版本)才能够配置LDAP，进行统一账号认证
+###### 注意：自己部署的sharelatex先要[**升级为Server Pro版本**](#升级为Server Pro版本)才能够配置LDAP，进行统一账号认证！
 
-### Environment Variables
+在`variables.env`中配置环境变量：
 
-- `SHARELATEX_LDAP_URL` **(required)** = Url of the LDAP server, E.g. 'ldaps://ldap.example.com:636'
-- `SHARELATEX_LDAP_EMAIL_ATT` = The email attribute the LDAP server will return, defaults to 'mail'
-- `SHARELATEX_LDAP_NAME_ATT` = The property name holding the name of the user which is used in the application
-- `SHARELATEX_LDAP_LAST_NAME_ATT` = If your LDAP server has a first and last name then this can be used in conjuction with `SHARELATEX_LDAP_NAME_ATT`
-- `SHARELATEX_LDAP_PLACEHOLDER` = The placeholder for the login form, defaults to 'Username'
-- `SHARELATEX_LDAP_UPDATE_USER_DETAILS_ON_LOGIN` = If set to 'true', will update the user first_name and last_name field on each login, and turn off the user-details form on /user/settings page. Otherwise, details will be fetched only on first login.
-- `SHARELATEX_LDAP_BIND_DN` = Optional, e.g. 'uid=myapp,ou=users,o=example.com'.
-- `SHARELATEX_LDAP_BIND_CREDENTIALS` = Password for bindDn.
-- `SHARELATEX_LDAP_BIND_PROPERTY` = Optional, default 'dn'. Property of user to bind against client e.g. 'name', 'email'
-- `SHARELATEX_LDAP_SEARCH_BASE` = The base DN from which to search for users by username. E.g. 'ou=users,o=example.com'
-- `SHARELATEX_LDAP_SEARCH_FILTER` = LDAP search filter with which to find a user by username, e.g. '(uid={{username}})'. Use the literal '{{username}}' to have the given username be interpolated in for the LDAP search.
-- `SHARELATEX_LDAP_SEARCH_SCOPE` = Optional, default 'sub'. Scope of the search, one of 'base', 'one', or 'sub'.
-- `SHARELATEX_LDAP_SEARCH_ATTRIBUTES` = Optional, default all. Json array of attributes to fetch from LDAP server.
-- `SHARELATEX_LDAP_GROUP_DN_PROPERTY` = Optional, default 'dn'. The property of user object to use in '{{dn}}' interpolation of groupSearchFilter.
-- `SHARELATEX_LDAP_GROUP_SEARCH_BASE` = Optional. The base DN from which to search for groups. If defined, also groupSearchFilter must be defined for the search to work.
-- `SHARELATEX_LDAP_GROUP_SEARCH_SCOPE` = Optional, default 'sub'.
-- `SHARELATEX_LDAP_GROUP_SEARCH_FILTER` = Optional. LDAP search filter for groups. The following literals are interpolated from the found user object: '{{dn}}' the property configured with groupDnProperty. Optionally you can also assign a function instead, which passes a user object, from this a dynamic groupsearchfilter can be retrieved.
-- `SHARELATEX_LDAP_GROUP_SEARCH_ATTRIBUTES` = Optional, default all. Json array of attributes to fetch from LDAP server.
-- `SHARELATEX_LDAP_CACHE` = Optional, default 'false'. If 'true', then up to 100 credentials at a time will be cached for 5 minutes.
-- `SHARELATEX_LDAP_TIMEOUT` = Optional, default Infinity. How long the client should let operations live for before timing out.
-- `SHARELATEX_LDAP_CONNECT_TIMEOUT` = Optional, default is up to the OS. How long the client should wait before timing out on TCP connections.
-- `SHARELATEX_LDAP_TLS_OPTS_CA_PATH` = A JSON array of paths to the CA file for TLS, must be accessible to the docker container. E.g. `-env SHARELATEX_LDAP_TLS_OPTS_CA_PATH='["/var/one.pem", "/var/two.pem"]'`
-- `SHARELATEX_LDAP_TLS_OPTS_REJECT_UNAUTH` = If 'true', the server certificate is verified against the list of supplied CAs.
+#### 环境变量说明
+
+|                    变量名                    |                             说明                             |                 示例                 |
+| :------------------------------------------: | :----------------------------------------------------------: | :----------------------------------: |
+|             SHARELATEX_LDAP_URL              |                       LDAP服务器的URL                        |     ldaps://ldap.example.com:636     |
+|          SHARELATEX_LDAP_EMAIL_ATT           |          LDAP服务器中代表邮箱的字段名，默认为`mail`          |                 mail                 |
+|           SHARELATEX_LDAP_NAME_ATT           |   LDAP服务器中代表用户名的字段名，用作overleaf中显示的名称   |                  cn                  |
+|        SHARELATEX_LDAP_LAST_NAME_ATT         |                 LDAP服务器中代表姓氏的字段名                 |                  sn                  |
+|         SHARELATEX_LDAP_PLACEHOLDER          |                 登录填写表单中默认的占位名称                 |               Username               |
+| SHARELATEX_LDAP_UPDATE_USER_DETAILS_ON_LOGIN | 设置为`true`代表每次登录通过LDAP去验证，用户不能通过overleaf实例修改自身信息；设置为`false`代表第一次登录通过LDAP导入信息到本地overleaf实例的数据库进行管理 |                 true                 |
+|           SHARELATEX_LDAP_BIND_DN            |                   登录LDAP服务器绑定的DN名                   | uid=admin,ou=users,dc=example,dc=com |
+|       SHARELATEX_LDAP_BIND_CREDENTIALS       |                        绑定DN名的密码                        |               password               |
+|        SHARELATEX_LDAP_BIND_PROPERTY         |          LDAP服务器代表用户信息的字段名，默认为`dn`          |                  dn                  |
+|         SHARELATEX_LDAP_SEARCH_BASE          |                     进行查找检索的DN条目                     |      ou=users,dc=example,dc=com      |
+|        SHARELATEX_LDAP_SEARCH_FILTER         |                        LDAP 查询条件                         |          (uid={{username}})          |
+|         SHARELATEX_LDAP_SEARCH_SCOPE         |                   查询范围，默认值为`sub`                    |         必须为base或one或sub         |
+|      SHARELATEX_LDAP_SEARCH_ATTRIBUTES       | Optional, default all. Json array of attributes to fetch from LDAP server. |                                      |
+|      SHARELATEX_LDAP_GROUP_DN_PROPERTY       | Optional, default 'dn'. The property of user object to use in '{{dn}}' interpolation of groupSearchFilter. |                                      |
+|      SHARELATEX_LDAP_GROUP_SEARCH_BASE       | Optional. The base DN from which to search for groups. If defined, also groupSearchFilter must be defined for the search to work |                                      |
+|      SHARELATEX_LDAP_GROUP_SEARCH_SCOPE      |                   Optional, default 'sub'                    |                                      |
+|     SHARELATEX_LDAP_GROUP_SEARCH_FILTER      | Optional. LDAP search filter for groups. The following literals are interpolated from the found user object: '{{dn}}' the property configured with groupDnProperty. Optionally you can also assign a function instead, which passes a user object, from this a dynamic groupsearchfilter can be retrieved |                                      |
+|   SHARELATEX_LDAP_GROUP_SEARCH_ATTRIBUTES    | Optional, default all. Json array of attributes to fetch from LDAP server. |                                      |
+|            SHARELATEX_LDAP_CACHE             | 是否对LDAP认证信息进行缓存，默认为`true`（对最多100条记录进行5分钟的缓存） |                 true                 |
+|           SHARELATEX_LDAP_TIMEOUT            |          客户端不进行操作之后的超时时间，默认为无穷          |                 600                  |
+|       SHARELATEX_LDAP_CONNECT_TIMEOUT        |        客户端TCP重连时间，默认值为系统设置的重连时间         |                  10                  |
+|       SHARELATEX_LDAP_TLS_OPTS_CA_PATH       | 以JSON数组形式填入TLS认证的证书路径，且保证在docker容器中可以访问到 |   ["/var/one.pem", "/var/two.pem"]   |
+|    SHARELATEX_LDAP_TLS_OPTS_REJECT_UNAUTH    |          设置为`true`则强制根据提供的CA列表验证证书          |                 true                 |
 
 
 

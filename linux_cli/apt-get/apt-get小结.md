@@ -7,6 +7,8 @@
 ```shell
 # 保存原来源
 sudo cp /etc/apt/sources.list /etc/apt/sources.list.origin.save
+# 进入保存源的文件，修改为需要的源信息
+sudo vim /etc/apt/sources/list
 ```
 
 ### 清华源
@@ -146,12 +148,23 @@ deb http://mirrors.163.com/ubuntu-ports/ focal-backports main restricted univers
 
 
 
+## 使用
 
-
-## 重置远程仓库
+### 重置远程仓库
 
 ```shell
 sudo apt-get clean
 sudo rm -rf /var/lib/apt/lists/
+```
+
+### apt-get 参数设置
+
+
+
+```shell
+# 强制apt-get走IPv4
+sudo apt-get -o Acquire::ForceIPv4=true update
+# 将your_proxy替换为apt的http报文使用的代理地址
+sudo apt -o Acquire::http::Proxy="${your_proxy}" update 
 ```
 

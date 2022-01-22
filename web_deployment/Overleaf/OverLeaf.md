@@ -433,31 +433,39 @@ mongoexport -d sharelatex -c users -f email
 
 #### 环境变量说明
 
-|                    变量名                    |                             说明                             |                 示例                 |
-| :------------------------------------------: | :----------------------------------------------------------: | :----------------------------------: |
-|             SHARELATEX_LDAP_URL              |                       LDAP服务器的URL                        |     ldaps://ldap.example.com:636     |
-|          SHARELATEX_LDAP_EMAIL_ATT           |          LDAP服务器中代表邮箱的字段名，默认为`mail`          |                 mail                 |
-|           SHARELATEX_LDAP_NAME_ATT           |   LDAP服务器中代表用户名的字段名，用作overleaf中显示的名称   |                  cn                  |
-|        SHARELATEX_LDAP_LAST_NAME_ATT         |                 LDAP服务器中代表姓氏的字段名                 |                  sn                  |
-|         SHARELATEX_LDAP_PLACEHOLDER          |                 登录填写表单中默认的占位名称                 |               Username               |
-| SHARELATEX_LDAP_UPDATE_USER_DETAILS_ON_LOGIN | 设置为`true`代表每次登录通过LDAP去验证，用户不能通过overleaf实例修改自身信息；设置为`false`代表第一次登录通过LDAP导入信息到本地overleaf实例的数据库进行管理 |                 true                 |
-|           SHARELATEX_LDAP_BIND_DN            |                   登录LDAP服务器绑定的DN名                   | uid=admin,ou=users,dc=example,dc=com |
-|       SHARELATEX_LDAP_BIND_CREDENTIALS       |                        绑定DN名的密码                        |               password               |
-|        SHARELATEX_LDAP_BIND_PROPERTY         |          LDAP服务器代表用户信息的字段名，默认为`dn`          |                  dn                  |
-|         SHARELATEX_LDAP_SEARCH_BASE          |                     进行查找检索的DN条目                     |      ou=users,dc=example,dc=com      |
-|        SHARELATEX_LDAP_SEARCH_FILTER         |                        LDAP 查询条件                         |          (uid={{username}})          |
-|         SHARELATEX_LDAP_SEARCH_SCOPE         |                   查询范围，默认值为`sub`                    |         必须为base或one或sub         |
-|      SHARELATEX_LDAP_SEARCH_ATTRIBUTES       | Optional, default all. Json array of attributes to fetch from LDAP server. |                                      |
-|      SHARELATEX_LDAP_GROUP_DN_PROPERTY       | Optional, default 'dn'. The property of user object to use in '{{dn}}' interpolation of groupSearchFilter. |                                      |
-|      SHARELATEX_LDAP_GROUP_SEARCH_BASE       | Optional. The base DN from which to search for groups. If defined, also groupSearchFilter must be defined for the search to work |                                      |
-|      SHARELATEX_LDAP_GROUP_SEARCH_SCOPE      |                   Optional, default 'sub'                    |                                      |
-|     SHARELATEX_LDAP_GROUP_SEARCH_FILTER      | Optional. LDAP search filter for groups. The following literals are interpolated from the found user object: '{{dn}}' the property configured with groupDnProperty. Optionally you can also assign a function instead, which passes a user object, from this a dynamic groupsearchfilter can be retrieved |                                      |
-|   SHARELATEX_LDAP_GROUP_SEARCH_ATTRIBUTES    | Optional, default all. Json array of attributes to fetch from LDAP server. |                                      |
-|            SHARELATEX_LDAP_CACHE             | 是否对LDAP认证信息进行缓存，默认为`true`（对最多100条记录进行5分钟的缓存） |                 true                 |
-|           SHARELATEX_LDAP_TIMEOUT            |          客户端不进行操作之后的超时时间，默认为无穷          |                 600                  |
-|       SHARELATEX_LDAP_CONNECT_TIMEOUT        |        客户端TCP重连时间，默认值为系统设置的重连时间         |                  10                  |
-|       SHARELATEX_LDAP_TLS_OPTS_CA_PATH       | 以JSON数组形式填入TLS认证的证书路径，且保证在docker容器中可以访问到 |   ["/var/one.pem", "/var/two.pem"]   |
-|    SHARELATEX_LDAP_TLS_OPTS_REJECT_UNAUTH    |          设置为`true`则强制根据提供的CA列表验证证书          |                 true                 |
+- `EXTERNAL_AUTH`：需要设置为`ldap`
+- 映射相关信息设置：
+  - `SHARELATEX_LDAP_URL`：LDAP服务器的URL，例如`ldaps://ldap.example.com:636`
+  - `SHARELATEX_LDAP_EMAIL_ATT`：LDAP服务器中代表邮箱的字段名，默认为`mail`
+  - `SHARELATEX_LDAP_NAME_ATT`：  LDAP服务器中代表用户名的字段名，用作overleaf中显示的名称，例如`cn`
+  - `SHARELATEX_LDAP_LAST_NAME_ATT`：LDAP服务器中代表姓氏的字段名，例如`sn`
+  - `SHARELATEX_LDAP_PLACEHOLDER`：登录填写表单中默认的占位名称，默认为`Username`
+  - `SHARELATEX_LDAP_UPDATE_USER_DETAILS_ON_LOGIN`：设置为`true`代表每次登录通过LDAP去验证，用户不能通过overleaf实例修改自身信息；设置为`false`代表第一次登录通过LDAP导入信息到本地overleaf实例的数据库进行管理
+
+- 绑定DN设置：
+  - `SHARELATEX_LDAP_BIND_DN`：登录LDAP服务器绑定的DN名，例如`uid=admin,ou=users,dc=example,dc=com`
+  - `SHARELATEX_LDAP_BIND_CREDENTIALS`：在LDAP服务器设置的上述绑定DN名的密码
+  - `SHARELATEX_LDAP_BIND_PROPERTY`：LDAP服务器代表用户信息的字段名，默认为`dn`
+  - `SHARELATEX_LDAP_SEARCH_BASE`：进行查找检索的基础DN条目，例如`ou=users,dc=example,dc=com`
+  - `SHARELATEX_LDAP_SEARCH_FILTER`：LDAP 查询条件，例如`(uid={{username}})`，使用`{{username}}`将给定的某些用户名插入到LDAP搜索条件中
+  - `SHARELATEX_LDAP_SEARCH_SCOPE`：查询范围，必须为`base`或`one`或`sub`，默认值为`sub`
+  - `SHARELATEX_LDAP_SEARCH_ATTRIBUTES`：默认为所有，可填写要从LDAP服务器获取属性的json数组
+
+- 绑定组设置：
+  - `SHARELATEX_LDAP_GROUP_DN_PROPERTY `：默认为`dn`，在`SHARELATEX_LDAP_GROUP_SEARCH_FILTER` 的`{{dn}}`插值中使用的用户对象属性
+  - `SHARELATEX_LDAP_GROUP_SEARCH_BASE`：搜索的基础DN，如果要使用此选项，还必须定义`SHARELATEX_LDAP_GROUP_SEARCH_FILTER`，使搜索正常运行
+  - `SHARELATEX_LDAP_GROUP_SEARCH_FILTER`：组搜索查询条件，例如`{{dn}}`，可以从找到的用户对象中插入以下文字插入`{{dn}}`，并使用`SHARELATEX_LDAP_GROUP_DN_PROPERTY`配置的属性
+  - `SHARELATEX_LDAP_GROUP_SEARCH_SCOPE`：必须为`base`或`one`或`sub`，默认为`sub`
+  - `SHARELATEX_LDAP_GROUP_SEARCH_ATTRIBUTES`：默认为所有，可填写要从LDAP服务器获取属性的json数组
+
+- 系统相关设置
+  - `SHARELATEX_LDAP_CACHE`：是否对LDAP认证信息进行缓存，最多支持100条记录进行5分钟缓存，默认为`true`
+  - `SHARELATEX_LDAP_TIMEOUT`：客户端不进行操作之后的超时时间，默认为无穷，例如`600`
+  - `SHARELATEX_LDAP_CONNECT_TIMEOUT `：客户端TCP重连时间，默认值为系统设置的重连时间，例如`10`
+  - `SHARELATEX_LDAP_TLS_OPTS_CA_PATH`：以JSON数组形式填入TLS认证的证书路径，且保证在docker容器中可以访问到，例如`["/var/one.pem", "/var/two.pem"]`
+  - `SHARELATEX_LDAP_TLS_OPTS_REJECT_UNAUTH`：设置为`true`则强制根据提供的CA列表验证证书
+
+
 
 
 

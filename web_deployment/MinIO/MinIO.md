@@ -2,7 +2,9 @@
 
 > [官网](https://min.io/)
 >
-> [官方文档](https://docs.min.io/)
+> [旧版官方文档](https://docs.min.io/)
+>
+> [新官方文档](https://docs.min.io/minio/baremetal/)
 >
 > [官方下载页面](https://min.io/download)
 >
@@ -372,4 +374,12 @@ minio server http://node{1...16}.example.com/mnt/export{1...32} \
             http://node{17...64}.example.com/mnt/export{1...64}
 
 ```
+
+
+
+
+
+### 用户管理
+
+> [官方用户管理说明](https://docs.min.io/minio/baremetal/security/minio-identity-management/user-management.html)
 

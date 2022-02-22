@@ -7,6 +7,7 @@
 > - <https://www.cnblogs.com/qqflying/p/9192331.html>
 > - <https://blog.csdn.net/suifeng3051/article/details/38657613>
 > - <https://blog.csdn.net/wsdc0521/article/details/106765856>
+> - https://www.jb51.net/article/211498.htm
 
 ## 介绍
 
@@ -80,8 +81,6 @@ Redis版本：
    redis-cli ping
    ```
 
-   
-
 6. 
 
 
@@ -149,13 +148,13 @@ Redis版本：
 
 ## 使用
 
-> [命令行工具说明](https://redis.io/topics/rediscli)
+> [redis-cli命令行工具示例](https://redis.io/topics/rediscli)
 >
-> https://redis.io/commands
+> [Redis命令具体说明](https://redis.io/commands)
 
 ### 配置Redis数据库
 
-> https://redis.io/topics/config
+> [官方Redis配置简介](https://redis.io/topics/config)
 >
 > [官方设置配置说明](https://redis.io/commands/config-set)
 >
@@ -165,7 +164,27 @@ Redis版本：
 
 
 
+### 命令行使用
 
+在linux shell下，可以使用`redis-cli`工具，直接在redis-cli命令后面输入需要使用参数及执行的指令，例如：
+
+```shell
+# 格式为redis-cli [OPTIONS] [cmd [arg [arg ...]]]
+redis-cli -h 127.0.0.1 -p 6379 ping
+redis-cli get mypasswd
+redis-cli config get *
+redis-cli acl list
+```
+
+也可以不输入要执行的指令，进入redis客户端的shell，再输入要执行的指令，例如：
+
+```shell
+redis-cli -h 127.0.0.1 -p 6379 --user user --pass password
+127.0.0.1:6379> ping
+127.0.0.1:6379> get mypasswd
+127.0.0.1:6379> config get *
+127.0.0.1:6379> acl list
+```
 
 
 
@@ -173,8 +192,8 @@ Redis版本：
 
 Redis有两种设置用户验证的方式：
 
-1. configfile：`/etc/redis/redis.config`文件中直接配置
-2. aclfile：在外部文件中配置，一般位于`/etc/redis/users.acl`，具体文件路径可在`redis.config`中指定
+1. `configfile`：`/etc/redis/redis.config`文件中直接配置
+2. `aclfile`：在外部文件中配置，一般位于`/etc/redis/users.acl`，具体文件路径可在`redis.config`中指定
 
 以上两种方式的配置命令和语法一致，均采用DSL(Domain specific language)定义的，该DSL描述了用户能够执行的操作，其始终从上到下，从左到右应用，因为规则的顺序对于理解用户的实际权限很重要
 
@@ -186,7 +205,7 @@ Redis有两种设置用户验证的方式：
 
 #### config文件
 
-##### requirepass
+##### 使用requirepass
 
 在config文件中找到requirepass修改此行，或者直接添加：
 
@@ -197,9 +216,19 @@ requirepass ${password}
 
 
 
-##### ACL规则
+##### 使用ACL规则
 
 与ACLFILE中使用DSL语言规范一致，只是可以写在config文件中，在使用Redis时对用户规则的改动与外部ACLFILE方式有所区别，具体请见[两种方式配置的对比](# 两种方式配置的对比)
+
+
+
+##### 配置持久化
+
+在config文件中进行修改后如果想直接持久保存到文件中，需要：
+
+```shell
+redis-cli config rewrite
+```
 
 
 
@@ -241,7 +270,32 @@ requirepass ${password}
 - `resetpass`：情况该用户的所有密码列表，而且移除`nopass`状态。`resetpass`之后用户没有关联的密码同时也无法使用无密码登录，因此`resetpass`之后必须添加密码或改为`nopass`状态才能正常登录。
 - `reset`：重置用户状态为初始状态，相当于执行以下操作：`resetpass`，`resetkeys`，`off`，`-@all`
 
+以上DSL编写的ACL指令可以直接使用命令的形式在命令行中添加，也可以直接写入文件并从文件导入，二者语法一致
 
+
+
+##### 加载与保存
+
+###### 重新加载`ACLFILE`
+
+将`ACLFILE`配置完成后，需要重新刷新权限，类似Mysql中的`flush privileges`：
+
+```shell
+# 系统重启redis服务，在shell中执行
+systemctl restart redis
+# 也可以不重启服务，在redis-cli命令行中执行
+redis-cli acl load
+```
+
+###### 持久化配置
+
+对于保存当前的用户配置到`aclfile`，需要
+
+```shell
+redis-cli acl save
+```
+
+对于其他的配置，与使用`config`文件中保存配置方法一致，使用`redis-cli config rewrite`
 
 
 

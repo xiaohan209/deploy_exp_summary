@@ -43,8 +43,6 @@
    curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh | sudo bash
    ```
 
-   
-
 3. 换源（如果有代理或者速度OK的话可以跳过
 
    ```shell
@@ -87,6 +85,8 @@
       sudo apt-cache madison gitlab-ee
       sudo apt install gitlab-ee=<version>
       ```
+      
+   3. 更新时如果出现错误，请看[更新相关内容](#更新相关)
 
 5. 检查一下：
 
@@ -128,12 +128,6 @@
    
    可参见[重置 root 密码](https://docs.gitlab.com/ee/security/reset_user_password.html)
    
-
-
-
-
-
-
 
 
 
@@ -487,3 +481,29 @@ sudo gitlab-rake "gitlab:password:reset[username]"
 ```
 puts Readline::HISTORY.to_a
 ```
+
+
+
+### 更新相关
+
+#### 替换新签名
+
+如果出现签名过期的情况：
+
+```shell
+# The following signatures couldn’t be verified because the public key is not available: NO_PUBKEY 3F01618A51312F3F
+# https://packages.gitlab.com/gitlab/gitlab-ee/el/7/x86_64/repodata/repomd.xml: [Errno -1] repomd.xml signature could not be verified for gitlab-ee
+# W: 校验数字签名时出错。此仓库未被更新，所以仍然使用此前的索引文件。GPG 错误 https://mirrors.tuna.tsinghua.edu.cn/gitlab-ee/ubuntu focal InRelease:下列签名无校： EXPKEYSIG 3F01618A51312F3F GitLab B.V. (package repository signing key) <packages@gitlab.com>
+# W: 无法下载 https://mirrors.tuna.tsinghua.edu.cn/gitlab-ee/ubuntu/dists/focal/InRelease  下列签名无效： EXPKEYSIG 3F01618A51312F3F GitLab B.V. (package reposiry signing key) <packages@gitlab.com>
+```
+
+需要替换签名：
+
+```shell
+curl https://packages.gitlab.com/gpg.key 2> /dev/null | sudo apt-key add - &>/dev/null
+```
+
+
+
+
+

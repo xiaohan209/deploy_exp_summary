@@ -65,6 +65,8 @@
       # 选定版本后，例如为10.0.0，则可以指定版本进行安装
       sudo apt-get install gitlab-runner=10.0.0
       ```
+      
+   3. 如果更新期间存在问题请查看[更新相关内容](#更新相关)
 
 5. 到此安装完成，可以使用了，可以查看一下当前版本是否正确：
 
@@ -163,4 +165,36 @@
 ### Docker容器安装
 
 1. 安装Docker
-2. 
+2. a
+
+
+
+
+
+
+
+## 使用
+
+### 更新相关
+
+#### 替换新签名
+
+如果出现签名过期的情况：
+
+```shell
+# The following signatures couldn’t be verified because the public key is not available: NO_PUBKEY 3F01618A51312F3F
+# https://packages.gitlab.com/gitlab/gitlab-ee/el/7/x86_64/repodata/repomd.xml: [Errno -1] repomd.xml signature could not be verified for gitlab-ee
+# W: 校验数字签名时出错。此仓库未被更新，所以仍然使用此前的索引文件。GPG 错误：https://packages.gitlab.com/runner/gitlab-runner/ubuntu bionic InRelease: 下列签无效： EXPKEYSIG 3F01618A51312F3F GitLab B.V. (package repository signing key) <packages@gitlab.com>
+# W: 无法下载 https://packages.gitlab.com/runner/gitlab-runner/ubuntu/dists/bionic/InRelease  下列签名无效： EXPKEYSIG 3F01618A51312F3F GitLab B.V. (package repitory signing key) <packages@gitlab.com>
+```
+
+需要替换签名：
+
+```shell
+curl https://packages.gitlab.com/gpg.key 2> /dev/null | sudo apt-key add - &>/dev/null
+```
+
+
+
+
+

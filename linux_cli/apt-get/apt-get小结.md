@@ -112,8 +112,6 @@ deb https://mirrors.ustc.edu.cn/ubuntu-ports/ focal-proposed main restricted uni
 #deb-src https://mirrors.ustc.edu.cn/ubuntu-ports/ focal-proposed main restricted universe multiverse
 ```
 
-
-
 ### 网易源
 
 #### x86
@@ -146,8 +144,6 @@ deb http://mirrors.163.com/ubuntu-ports/ focal-backports main restricted univers
 #deb-src http://mirrors.163.com/ubuntu-ports/ focal-backports main restricted universe multiverse
 ```
 
-
-
 ## 使用
 
 ### 重置远程仓库
@@ -159,8 +155,6 @@ sudo rm -rf /var/lib/apt/lists/
 
 ### apt-get 参数设置
 
-
-
 ```shell
 # 强制apt-get走IPv4
 sudo apt-get -o Acquire::ForceIPv4=true update
@@ -168,3 +162,61 @@ sudo apt-get -o Acquire::ForceIPv4=true update
 sudo apt -o Acquire::http::Proxy="${your_proxy}" update 
 ```
 
+### HTTPS报错
+
+对于出现类似以下情况的报错
+
+```shell
+Certificate verification failed: The certificate is NOT trusted. 
+The certificate issuer is unknown. Could not handshake: Error in the certificate verification. 
+The certificate is NOT trusted. The certificate issuer is unknown. Could not handshake: Error in the certificate verification.
+```
+
+可能是客户端证书认证的问题：可以尝试以下步骤：
+
+1. 安装`ca-certificates`包：
+   
+   ```shell
+   sudo apt-get install ca-certificates
+   ```
+
+2. 重装`ca-certificates`包：
+   
+   ```shell
+   sudo apt-get install --reinstall ca-certificates
+   ```
+
+3. 手动下载最新`ca-certificates`包：
+   
+   1. 前往官方寻找deb包：
+      
+      ```shell
+      # 官方网站
+      https://pkgs.org/download/ca-certificates
+      # 打不开可以在ubuntu镜像源寻找
+      http://archive.ubuntu.com/ubuntu/pool/main/c/ca-certificates/
+      # 清华源
+      https://mirrors.tuna.tsinghua.edu.cn/ubuntu/pool/main/c/ca-certificates/
+      # 以上为x86架构的源，如果要arm源则为
+      https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/pool/main/c/ca-certificates/
+      ```
+      
+      在镜像源中选取自身ubuntu版本以及架构的**all.deb**的包
+   
+   2. 下载包：
+      
+      ```shell
+      wget https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/pool/main/c/ca-certificates/ca-certificates_20210119~20.04.2_all.deb
+      ```
+   
+   3. 安装：
+      
+      ```shell
+      sudo dpkg -i ./ca-certificates_20210119~18.04.2_all.deb
+      ```
+
+4. 再次尝试update：
+   
+   ```shell
+   sudo apt-get update
+   ```

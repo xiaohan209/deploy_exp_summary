@@ -1,6 +1,10 @@
-# gitlab安装
+# Gitlab-EE edition
 
-## [配置条件及要求](https://docs.gitlab.com/ee/install/requirements.html)：
+## Gitlab 介紹
+
+## Gitlab 安装
+
+### [配置条件及要求](https://docs.gitlab.com/ee/install/requirements.html)：
 
 ###### 系统：ubuntu-20.04 focal
 
@@ -8,13 +12,11 @@
 
 ###### 安装类型：安装包Omnibus GitLab
 
-
-
-## Omnibus Gitlab安装方法
+### Omnibus Gitlab安装方法
 
 > 安装包相关的[信息链接](https://docs.gitlab.com/omnibus/)
 
-### 包类型说明
+#### 包类型说明
 
 [`gitlab/gitlab-ee`](https://packages.gitlab.com/gitlab/gitlab-ee)：包含所有社区版功能和[企业版](https://about.gitlab.com/pricing/)功能的完整 GitLab 包 。
 
@@ -26,9 +28,7 @@
 
 [`gitlab/raspberry-pi2`](https://packages.gitlab.com/gitlab/raspberry-pi2)：为[Raspberry Pi](https://www.raspberrypi.org/)软件包构建的官方社区版版本。
 
-
-
-### 具体安装步骤
+#### 具体安装步骤
 
 1. 安装最基础的依赖：
 
@@ -85,7 +85,7 @@
       sudo apt-cache madison gitlab-ee
       sudo apt install gitlab-ee=<version>
       ```
-      
+
    3. 更新时如果出现错误，请看[更新相关内容](#更新相关)
 
 5. 检查一下：
@@ -125,19 +125,12 @@
    > ```shell
    > sudo EXTERNAL_URL="https://gitlab.example.com" GITLAB_ROOT_PASSWORD="YourPassword" apt-get install gitlab-ee
    > ```
-   
+
    可参见[重置 root 密码](https://docs.gitlab.com/ee/security/reset_user_password.html)
-   
 
+## gitlab其他组件安装部署
 
-
-
-
-
-
-# gitlab其他组件安装部署
-
-## 邮件服务器SMTP：
+## 邮件服务器SMTP
 
 gitlab推荐使用postfix邮件服务器，直接安装：
 
@@ -147,11 +140,9 @@ sudo apt-get install -y postfix
 
 安装时候需要选择选项`Internet Site`，输入希望设置的域名即可，如果需要其他SMTP服务可参考[外部SMTP服务器设置](https://docs.gitlab.com/omnibus/settings/smtp.html)
 
+## Gitlab使用
 
-
-
-
-## [LDAP绑定](https://docs.gitlab.com/ee/administration/auth/ldap/index.html#ssl-configuration-settings)
+### [LDAP绑定](https://docs.gitlab.com/ee/administration/auth/ldap/index.html#ssl-configuration-settings)
 
 #### Omnibus软件包配置
 
@@ -218,9 +209,166 @@ production:
         ...
 ```
 
+### 使用外部后端代理
+
+> - [官方教程与说明](https://docs.gitlab.com/omnibus/settings/nginx.html)
+> - [官方recipe](https://gitlab.com/gitlab-org/gitlab-recipes/-/tree/master/web-server)
+> - 博客參考:
+>   - <https://segmentfault.com/a/1190000020791442>
+>   - <https://gist.github.com/atd-schubert/d30998e5d245e993c264>
+
+使用外部Nginx操作步骤:
+
+1. 编辑`/etc/gitlab/gitlab.rb`配置文件：
+
+   ```ruby
+   # 填入外部访问域名
+   external_url 'http://git.example.com'
+   # Disable the built-in nginx
+   nginx['enable'] = false
+   # Disable the built-in puma
+   puma['enable'] = false
+   # Set the internal API URL 填入域名
+   gitlab_rails['internal_api_url'] = 'http://git.example.com'
+   # Define the web server process user (ubuntu/nginx)
+   web_server['external_users'] = ['www-data']
+   ```
+
+2. 添加gitlab相关配置文件到外部nginx配置中：
+
+   ```nginx
+   upstream gitlab-workhorse {
+      server unix://var/opt/gitlab/gitlab-workhorse/sockets/socket fail_timeout=0;
+   }
+
+   server {
+      listen *:80;
+      # 填入自己的域名
+      server_name git.example.com;
+      server_tokens off;
+      root /opt/gitlab/embedded/service/gitlab-rails/public;
+
+      client_max_body_size 250m;
+
+      access_log  /var/log/nginx/gitlab_access.log;
+      error_log   /var/log/nginx/gitlab_error.log;
+
+      # Ensure Passenger uses the bundled Ruby version
+      passenger_ruby /opt/gitlab/embedded/bin/ruby;
+
+      # Correct the $PATH variable to included packaged executables
+      passenger_env_var PATH "/opt/gitlab/bin:/opt/gitlab/embedded/bin:/usr/local/bin:/usr/bin:/bin";
+
+      # Make sure Passenger runs as the correct user and group to
+      # prevent permission issues
+      passenger_user git;
+      passenger_group git;
+
+      # Enable Passenger & keep at least one instance running at all times
+      passenger_enabled on;
+      passenger_min_instances 1;
+
+      location ~ ^/[\w\.-]+/[\w\.-]+/(info/refs|git-upload-pack|git-receive-pack)$ {
+         # 'Error' 418 is a hack to re-use the @gitlab-workhorse block
+         error_page 418 = @gitlab-workhorse;
+         return 418;
+      }
+
+      location ~ ^/[\w\.-]+/[\w\.-]+/repository/archive {
+         # 'Error' 418 is a hack to re-use the @gitlab-workhorse block
+         error_page 418 = @gitlab-workhorse;
+         return 418;
+      }
+
+      location ~ ^/api/v3/projects/.*/repository/archive {
+         # 'Error' 418 is a hack to re-use the @gitlab-workhorse block
+         error_page 418 = @gitlab-workhorse;
+         return 418;
+      }
+
+      # Build artifacts should be submitted to this location
+      location ~ ^/[\w\.-]+/[\w\.-]+/builds/download {
+            client_max_body_size 0;
+            # 'Error' 418 is a hack to re-use the @gitlab-workhorse block
+            error_page 418 = @gitlab-workhorse;
+            return 418;
+      }
+
+      # Build artifacts should be submitted to this location
+      location ~ /ci/api/v1/builds/[0-9]+/artifacts {
+            client_max_body_size 0;
+            # 'Error' 418 is a hack to re-use the @gitlab-workhorse block
+            error_page 418 = @gitlab-workhorse;
+            return 418;
+      }
+
+      # Build artifacts should be submitted to this location
+      location ~ /api/v4/jobs/[0-9]+/artifacts {
+            client_max_body_size 0;
+            # 'Error' 418 is a hack to re-use the @gitlab-workhorse block
+            error_page 418 = @gitlab-workhorse;
+            return 418;
+      }
 
 
-## 存储库位置迁移
+      # For protocol upgrades from HTTP/1.0 to HTTP/1.1 we need to provide Host header if its missing
+      if ($http_host = "") {
+         # use one of values defined in server_name
+         # 填入自己的域名
+         set $http_host_with_default "git.example.com";
+      }
+
+      if ($http_host != "") {
+         set $http_host_with_default $http_host;
+      }
+
+      location @gitlab-workhorse {
+
+         ## https://github.com/gitlabhq/gitlabhq/issues/694
+         ## Some requests take more than 30 seconds.
+         proxy_read_timeout      3600;
+         proxy_connect_timeout   300;
+         proxy_redirect          off;
+
+         # Do not buffer Git HTTP responses
+         proxy_buffering off;
+
+         proxy_set_header    Host                $http_host_with_default;
+         proxy_set_header    X-Real-IP           $remote_addr;
+         proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
+         proxy_set_header    X-Forwarded-Proto   $scheme;
+
+         proxy_pass http://gitlab-workhorse;
+
+         ## The following settings only work with NGINX 1.7.11 or newer
+         #
+         ## Pass chunked request bodies to gitlab-workhorse as-is
+         # proxy_request_buffering off;
+         # proxy_http_version 1.1;
+      }
+
+      ## Enable gzip compression as per rails guide:
+      ## http://guides.rubyonrails.org/asset_pipeline.html#gzip-compression
+      ## WARNING: If you are using relative urls remove the block below
+      ## See config/application.rb under "Relative url support" for the list of
+      ## other files that need to be changed for relative url support
+      location ~ ^/(assets)/ {
+         root /opt/gitlab/embedded/service/gitlab-rails/public;
+         gzip_static on; # to serve pre-gzipped version
+         expires max;
+         add_header Cache-Control public;
+      }
+
+      ## To access Grafana
+      location /-/grafana/ {
+         proxy_pass http://localhost:3000/;
+      }
+
+      error_page 502 /502.html;
+   }
+   ```
+
+### 存储库位置迁移
 
 #### 参考博客
 
@@ -268,9 +416,7 @@ gitlab的存储库默认路径为：`/var/opt/gitlab/git-data/`，这个目录�
    gitlab-ctl start
    ```
 
-
-
-## Service Ping设置
+### Service Ping设置
 
 参考链接：<https://docs.gitlab.com/ee/development/service_ping/index.html#disable-service-ping>
 
@@ -315,7 +461,7 @@ gitlab的存储库默认路径为：`/var/opt/gitlab/git-data/`，这个目录�
 5. 取消勾选**Enable Service Ping**功能
 6. 点击下方**Save changes**保存更改
 
-## [取消注册功能](https://docs.gitlab.com/ee/user/admin_area/settings/sign_up_restrictions.html)
+### [取消注册功能](https://docs.gitlab.com/ee/user/admin_area/settings/sign_up_restrictions.html)
 
 #### 禁用新注册
 
@@ -326,7 +472,6 @@ gitlab的存储库默认路径为：`/var/opt/gitlab/git-data/`，这个目录�
 3. 点击**Sign-up restrictions**
 4. 取消勾选**Sign-up enabled**
 5. 点击下方**Save changes**保存更改
-
 
 
 ### 修改全局用户设置
@@ -369,7 +514,7 @@ gitlab的存储库默认路径为：`/var/opt/gitlab/git-data/`，这个目录�
 
 
 
-## [OmniAuth](https://docs.gitlab.com/ee/integration/omniauth.html#omniauth)
+### [OmniAuth](https://docs.gitlab.com/ee/integration/omniauth.html#omniauth)
 
 #### 禁用OmniAuth
 
@@ -388,7 +533,7 @@ gitlab的存储库默认路径为：`/var/opt/gitlab/git-data/`，这个目录�
 
    
 
-## [重置用户密码](https://docs.gitlab.com/ee/security/reset_user_password.html#reset-your-root-password)
+### [重置用户密码](https://docs.gitlab.com/ee/security/reset_user_password.html#reset-your-root-password)
 
 #### Rake方式
 
@@ -454,7 +599,7 @@ sudo gitlab-rake "gitlab:password:reset[username]"
 
 
 
-## [Rails Console启动及使用](https://docs.gitlab.com/ee/administration/operations/rails_console.html)
+### [Rails Console启动及使用](https://docs.gitlab.com/ee/administration/operations/rails_console.html)
 
 #### 启动
 

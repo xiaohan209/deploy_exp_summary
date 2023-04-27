@@ -1,16 +1,59 @@
 # MySQL & MariaDB
 
->参考博客：
->
->- 
-
 
 
 ## MySQL介绍
 
 ## MariaDB介绍
 
+## MariaDB安装
 
+> - [官方下载二进制运行文件页面](https://mariadb.org/download/)
+>
+> - [官方指定仓库网址](https://mariadb.org/download/?t=repo-config)
+
+###### **当前示例系统版本：Ubuntu 20.04 focal**
+
+1. 安装必要依赖：
+
+   ```bash
+   sudo apt-get install apt-transport-https curl gpg
+   ```
+
+2. 添加官方存储库密钥：
+
+   ```bash
+   sudo curl -o /etc/apt/trusted.gpg.d/mariadb_release_signing_key.asc 'https://mariadb.org/mariadb_release_signing_key.asc'
+   ```
+
+3. 添加存储库：
+
+   建议去[官方指定仓库网址](https://mariadb.org/download/?t=repo-config)根据自己的需要进行仓库链接的生成，对生成的文件写入`/etc/apt/sources.list.d/mariadb.list`中，文件示例：
+
+   ```bash
+   # https://mariadb.org/download/
+   deb https://mirrors.neusoft.edu.cn/mariadb/repo/11.0/ubuntu focal main
+   # deb-src https://mirrors.neusoft.edu.cn/mariadb/repo/11.0/ubuntu focal main
+   ```
+
+4. 换源：
+
+   ```bash
+   # 将链接url地址中的repo及以前的字段进行替换，保留后面的版本信息
+   # 例如将https://mirrors.neusoft.edu.cn/mariadb/repo替换为以下内容
+   https://mirrors.tuna.tsinghua.edu.cn/mariadb/repo
+   ```
+
+   如果遇到`Skipping acquire of configured file 'main/binary-i386/Packages' as repository ....... doesn't support architecture 'i386'`类似的警告信息，在`/etc/apt/sources.list.d/mariadb.list`的
+
+5. 下载并进行安装
+
+   ```bash
+   sudo apt-get update
+   sudo apt-get install mariadb-server mariadb-common
+   ```
+
+   
 
 
 
@@ -20,6 +63,8 @@
 
 ### MysqlDump
 
+> 参考博客：
+>
 > - https://www.cnblogs.com/markLogZhu/p/11398028.html
 > - https://www.cnblogs.com/chenmh/p/5300370.html
 > - https://www.runoob.com/mysql/mysql-database-export.html

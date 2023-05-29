@@ -34,11 +34,28 @@
 
 2. 添加官方存储库：
 
-   ```shell
-   curl -L "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh" | sudo bash
-   ```
+   1. 直接使用官方脚本添加
 
-3. 固定存储库：
+      ```shell
+      curl -L "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh" | sudo bash
+      ```
+      
+   2. 添加第三方存储库（清华源为例）
+   
+      先添加存储库gpg公钥：
+   
+      ```shell
+      curl https://packages.gitlab.com/gpg.key | sudo gpg --dearmour -o /etc/apt/trusted.gpg.d/gitlab-runner.gpg
+      ```
+   
+      将以下内容写入：
+   
+      ```shell
+      echo deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/trusted.gpg.d/gitlab-runner.gpg] https://mirrors.tuna.tsinghua.edu.cn/gitlab-runner/ubuntu $(lsb_release -c -s) main | sudo tee /etc/apt/sources.list.d/gitlab-runner.list > /dev/null
+      ```
+
+
+3. 固定存储库（可选）：
 
    ```shell
    cat <<EOF | sudo tee /etc/apt/preferences.d/pin-gitlab-runner.pref

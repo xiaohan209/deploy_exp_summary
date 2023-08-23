@@ -41,13 +41,13 @@ nginx是一个高性能的HTTP和反向代理服务器，也是一个IMAP/POP3/S
 
    ```shell
    curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
-       | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+       | sudo tee /etc/apt/trusted.gpg.d/nginx-archive-keyring.gpg >/dev/null
    ```
 
 3. 确认下载的签名正确：
 
    ```shell
-   gpg --dry-run --quiet --import --import-options import-show /usr/share/keyrings/nginx-archive-keyring.gpg
+   gpg --dry-run --quiet --import --import-options import-show /etc/apt/trusted.gpg.d/nginx-archive-keyring.gpg
    ```
 
    确认输出为：
@@ -63,7 +63,7 @@ nginx是一个高性能的HTTP和反向代理服务器，也是一个IMAP/POP3/S
    稳定版仓库输入以下命令：
 
    ```shell
-   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
+   echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/trusted.gpg.d/nginx-archive-keyring.gpg] \
    http://nginx.org/packages/ubuntu `lsb_release -cs` nginx" \
        | sudo tee /etc/apt/sources.list.d/nginx.list
    ```
@@ -71,7 +71,7 @@ nginx是一个高性能的HTTP和反向代理服务器，也是一个IMAP/POP3/S
    如果需要添加最新开发版，即Mainline Package，则为：
 
    ```shell
-   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
+   echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/trusted.gpg.d/nginx-archive-keyring.gpg] \
    http://nginx.org/packages/mainline/ubuntu `lsb_release -cs` nginx" \
        | sudo tee /etc/apt/sources.list.d/nginx.list
    ```

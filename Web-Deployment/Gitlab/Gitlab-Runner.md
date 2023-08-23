@@ -45,7 +45,7 @@
       先添加存储库gpg公钥：
    
       ```shell
-      curl https://packages.gitlab.com/gpg.key | sudo gpg --dearmour -o /etc/apt/trusted.gpg.d/gitlab-runner.gpg
+      curl https://packages.gitlab.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/gitlab-runner.gpg > /dev/null
       ```
    
       将以下内容写入：

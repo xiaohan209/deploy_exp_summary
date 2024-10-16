@@ -38,15 +38,11 @@ Redis版本：
    sudo apt-get install curl gpg
    ```
 
-   
-
 2. 添加GPG Key：
 
    ```shell
-   sudo curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+   sudo curl -fsSL https://packages.redis.io/gpg | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/redis-archive-keyring.gpg > /dev/null
    ```
-
-   
 
 3. 添加仓库：
 
@@ -54,9 +50,9 @@ Redis版本：
 
       ```shell
       # 官方镜像源
-      echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+      echo "deb [signed-by=/etc/apt/trusted.gpg.d/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
       # 华为镜像
-      echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://mirrors.huaweicloud.com/redis/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+      echo "deb [signed-by=/etc/apt/trusted.gpg.d/redis-archive-keyring.gpg] https://mirrors.huaweicloud.com/redis/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
       ```
 
    2. 添加PPA个人存储库最新版，则为：
@@ -80,8 +76,6 @@ Redis版本：
    # 检查命令行工具以及其连接情况
    redis-cli ping
    ```
-
-6. 
 
 
 

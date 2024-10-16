@@ -280,8 +280,14 @@
       fc-cache -fv
       # 检查安装结果
       fc-list :lang=zh-cn
+      # 另外的安装字体方式
+      apt install ttf-mscorefonts-installer
+      apt update
+      apt install xfonts-utils
+      mkfontdir # 安装字体
+      fc-cache -fv # 刷新字体缓存
       ```
-
+      
       
 
 9. 根据需要可以保存完整版为新镜像：

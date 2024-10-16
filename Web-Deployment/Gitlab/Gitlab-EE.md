@@ -240,52 +240,52 @@ production:
    upstream gitlab-workhorse {
       server unix://var/opt/gitlab/gitlab-workhorse/sockets/socket fail_timeout=0;
    }
-
+   
    server {
       listen *:80;
       # 填入自己的域名
       server_name git.example.com;
       server_tokens off;
       root /opt/gitlab/embedded/service/gitlab-rails/public;
-
+   
       client_max_body_size 250m;
-
+   
       access_log  /var/log/nginx/gitlab_access.log;
       error_log   /var/log/nginx/gitlab_error.log;
-
+   
       # Ensure Passenger uses the bundled Ruby version
       passenger_ruby /opt/gitlab/embedded/bin/ruby;
-
+   
       # Correct the $PATH variable to included packaged executables
       passenger_env_var PATH "/opt/gitlab/bin:/opt/gitlab/embedded/bin:/usr/local/bin:/usr/bin:/bin";
-
+   
       # Make sure Passenger runs as the correct user and group to
       # prevent permission issues
       passenger_user git;
       passenger_group git;
-
+   
       # Enable Passenger & keep at least one instance running at all times
       passenger_enabled on;
       passenger_min_instances 1;
-
+   
       location ~ ^/[\w\.-]+/[\w\.-]+/(info/refs|git-upload-pack|git-receive-pack)$ {
          # 'Error' 418 is a hack to re-use the @gitlab-workhorse block
          error_page 418 = @gitlab-workhorse;
          return 418;
       }
-
+   
       location ~ ^/[\w\.-]+/[\w\.-]+/repository/archive {
          # 'Error' 418 is a hack to re-use the @gitlab-workhorse block
          error_page 418 = @gitlab-workhorse;
          return 418;
       }
-
+   
       location ~ ^/api/v3/projects/.*/repository/archive {
          # 'Error' 418 is a hack to re-use the @gitlab-workhorse block
          error_page 418 = @gitlab-workhorse;
          return 418;
       }
-
+   
       # Build artifacts should be submitted to this location
       location ~ ^/[\w\.-]+/[\w\.-]+/builds/download {
             client_max_body_size 0;
@@ -293,7 +293,7 @@ production:
             error_page 418 = @gitlab-workhorse;
             return 418;
       }
-
+   
       # Build artifacts should be submitted to this location
       location ~ /ci/api/v1/builds/[0-9]+/artifacts {
             client_max_body_size 0;
@@ -301,7 +301,7 @@ production:
             error_page 418 = @gitlab-workhorse;
             return 418;
       }
-
+   
       # Build artifacts should be submitted to this location
       location ~ /api/v4/jobs/[0-9]+/artifacts {
             client_max_body_size 0;
@@ -317,36 +317,36 @@ production:
          # 填入自己的域名
          set $http_host_with_default "git.example.com";
       }
-
+    
       if ($http_host != "") {
          set $http_host_with_default $http_host;
       }
-
+    
       location @gitlab-workhorse {
-
+    
          ## https://github.com/gitlabhq/gitlabhq/issues/694
          ## Some requests take more than 30 seconds.
          proxy_read_timeout      3600;
          proxy_connect_timeout   300;
          proxy_redirect          off;
-
+    
          # Do not buffer Git HTTP responses
          proxy_buffering off;
-
+    
          proxy_set_header    Host                $http_host_with_default;
          proxy_set_header    X-Real-IP           $remote_addr;
          proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
          proxy_set_header    X-Forwarded-Proto   $scheme;
-
+    
          proxy_pass http://gitlab-workhorse;
-
+    
          ## The following settings only work with NGINX 1.7.11 or newer
          #
          ## Pass chunked request bodies to gitlab-workhorse as-is
          # proxy_request_buffering off;
          # proxy_http_version 1.1;
       }
-
+    
       ## Enable gzip compression as per rails guide:
       ## http://guides.rubyonrails.org/asset_pipeline.html#gzip-compression
       ## WARNING: If you are using relative urls remove the block below
@@ -358,12 +358,12 @@ production:
          expires max;
          add_header Cache-Control public;
       }
-
+    
       ## To access Grafana
       location /-/grafana/ {
          proxy_pass http://localhost:3000/;
       }
-
+    
       error_page 502 /502.html;
    }
    ```
@@ -645,10 +645,29 @@ puts Readline::HISTORY.to_a
 需要替换签名：
 
 ```shell
-curl https://packages.gitlab.com/gpg.key 2> /dev/null | sudo apt-key add - &>/dev/null
+curl https://packages.gitlab.com/gpg.key 2> /dev/null | sudo gpg --dearmour -o /etc/apt/trusted.gpg.d/gitlab-ee.gpg - &>/dev/null
 ```
 
 
 
+#### 签名在trusted.gpg中
 
+报错:
+
+```bash
+# W: https://mirrors.tuna.tsinghua.edu.cn/gitlab-ee/ubuntu/dists/jammy/InRelease: Key is stored in legacy trusted.gpg keyring (/etc/apt/trusted.gpg), see the DEPRECATION section in apt-key(8) for details.
+```
+
+执行：
+
+```bash
+# 1. 列出所有apt-key，找到在trusted.gpg中出现的签名，复制末尾8位
+sudo apt-key list
+# 2.a 导出${}为找到的签名末8位
+sudo apt-key export ${signature} | sudo gpg --dearmour -o /etc/apt/trusted.gpg.d/gitlab-ee.gpg
+# 2.b 或者重新添加签名
+curl https://packages.gitlab.com/gpg.key 2> /dev/null | sudo gpg --dearmour -o /etc/apt/trusted.gpg.d/gitlab-ee.gpg - &>/dev/null
+# 3. 删除之前的签名${}内的为找到的签名末8位
+sudo apt-key --keyring /etc/apt/trusted.gpg del ${signature} 
+```
 

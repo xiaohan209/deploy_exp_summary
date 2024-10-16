@@ -182,7 +182,6 @@
 ### Docker容器安装
 
 1. 安装Docker
-2. a
 
 
 
@@ -208,10 +207,31 @@
 需要替换签名：
 
 ```shell
-curl https://packages.gitlab.com/gpg.key 2> /dev/null | sudo apt-key add - &>/dev/null
+curl https://packages.gitlab.com/gpg.key 2> /dev/null | sudo gpg --dearmour -o /etc/apt/trusted.gpg.d/gitlab-runner.gpg - &>/dev/null
 ```
 
 
 
 
+
+#### 签名在trusted.gpg中
+
+报错:
+
+```bash
+# W: https://mirrors.tuna.tsinghua.edu.cn/gitlab-ee/ubuntu/dists/jammy/InRelease: Key is stored in legacy trusted.gpg keyring (/etc/apt/trusted.gpg), see the DEPRECATION section in apt-key(8) for details.
+```
+
+执行：
+
+```bash
+# 1. 列出所有apt-key，找到在trusted.gpg中出现的签名，复制末尾8位
+sudo apt-key list
+# 2.a 导出${}为找到的签名末8位
+sudo apt-key export ${signature} | sudo gpg --dearmour -o /etc/apt/trusted.gpg.d/gitlab-runner.gpg
+# 2.b 或者重新添加签名
+curl https://packages.gitlab.com/gpg.key 2> /dev/null | sudo gpg --dearmour -o /etc/apt/trusted.gpg.d/gitlab-runner.gpg - &>/dev/null
+# 3. 删除之前的签名${}内的为找到的签名末8位
+sudo apt-key --keyring /etc/apt/trusted.gpg del ${signature} 
+```
 
